@@ -1,57 +1,79 @@
 using UnityEngine;
 using DG.Tweening;
+using System.Collections;
 
 namespace Platform
 {
+    /// <summary>
+    /// Controls the patrol movement of a platform between two points.
+    /// </summary>
     public class PlatformPatrol : MonoBehaviour
     {
-        [SerializeField] private Vector3 point1;
-        [SerializeField] private Vector3 point2;
-        [SerializeField] private float timeMove = 2;
-        [SerializeField] private float delay = 1;
+        [SerializeField, Tooltip("First patrol point relative to the platform's starting position.")]
+        private Vector3 point1;
+
+        [SerializeField, Tooltip("Second patrol point relative to the platform's starting position.")]
+        private Vector3 point2;
+
+        [SerializeField, Tooltip("Time taken to move between points.")]
+        private float timeMove = 2;
+
+        [SerializeField, Tooltip("Delay between movements.")]
+        private float delay = 1;
 
         private Vector3 _currentPoint1;
         private Vector3 _currentPoint2;
+        private bool _isPatrolling = true;
 
         private void Awake()
         {
-            var position = transform.position;
-            _currentPoint1 = position + point1;
-            _currentPoint2 = position + point2;
+            _currentPoint1 = transform.position + point1;
+            _currentPoint2 = transform.position + point2;
         }
 
-        // Start is called before the first frame update
-        void Start()
+        private void Start()
         {
-            MoveToPoint1();
+            StartCoroutine(Patrol());
         }
 
         private void OnDrawGizmos()
         {
-            var position = transform.position;
-            Vector3 p1 = position + point1;
-            Vector3 p2 = position + point2;
-            
+            DrawPatrolPoints();
+        }
+
+        private void DrawPatrolPoints()
+        {
             Gizmos.color = Color.blue;
-            Gizmos.DrawSphere(p1,0.2f);
+            Gizmos.DrawSphere(transform.position + point1, 0.2f);
+
             Gizmos.color = Color.red;
-            Gizmos.DrawSphere(p2,0.2f);
+            Gizmos.DrawSphere(transform.position + point2, 0.2f);
+
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawLine(transform.position + point1, transform.position + point2);
         }
 
-        private void MoveToPoint1()
+        private IEnumerator Patrol()
         {
-            transform.DOMove(_currentPoint1, timeMove).OnComplete(() =>
+            while (_isPatrolling)
             {
-                Invoke(nameof(MoveToPoint2), delay);
-            });
+                yield return MoveToTarget(_currentPoint1);
+                yield return new WaitForSeconds(delay);
+                yield return MoveToTarget(_currentPoint2);
+                yield return new WaitForSeconds(delay);
+            }
         }
 
-        private void MoveToPoint2()
+        private IEnumerator MoveToTarget(Vector3 target)
         {
-            transform.DOMove(_currentPoint2, timeMove).OnComplete(() =>
-            {
-                Invoke(nameof(MoveToPoint1), delay);
-            });
+            yield return transform.DOMove(target, timeMove).WaitForCompletion();
+        }
+
+        // Call this method to stop the platform's patrol movement.
+        public void StopPatrolling()
+        {
+            _isPatrolling = false;
+            StopAllCoroutines();
         }
     }
 }
