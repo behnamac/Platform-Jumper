@@ -26,11 +26,11 @@ namespace Player
             {
                 //Values
                 var platform = collision.gameObject.GetComponent<PlatformController>();
-                var difference = _playerColor.playerColor.GetHashCode() - platform.platformColor.GetHashCode();
+                var difference = _playerColor.PlayerColor.GetHashCode() - platform.platformColor.GetHashCode();
                 difference = Mathf.Abs(difference);
 
                 //Active Grounded
-                _playerMove.SetActiveGrounded(true);
+                _playerMove.SetGroundedState(true);
 
                 //Check For Lose or Change Color
                 if (platform.changeColor)
@@ -41,7 +41,7 @@ namespace Player
                 //Check Spring
                 if (difference <= 9999999 && platform.spring)
                 {
-                    _playerMove.Jump(platform.targetJump, platform.curve);
+                    _playerMove.PerformJump(platform.targetJump, platform.curve);
                 }
 
                 //Set Position, Rotation and Parent
@@ -68,7 +68,7 @@ namespace Player
             else if (other.gameObject.CompareTag($"X"))
             {
                 _xNumber++;
-                _playerHealth.FinishDamage(_playerHealth.postLevelDamageValue);
+                _playerHealth.FinishDamage(_playerHealth.PostLevelDamageValue);
                 if (_xNumber >= 10)
                 {
                     LevelManager.instance.LevelComplete();

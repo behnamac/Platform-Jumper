@@ -4,16 +4,28 @@ namespace Player
 {
     public class PlayerColorController : MonoBehaviour
     {
-        [SerializeField] private Renderer[] meshRenderers;
-        public Color playerColor { get; private set; }
+        [SerializeField, Tooltip("Mesh renderers to change color.")]
+        private Renderer[] meshRenderers;
 
+        public Color PlayerColor { get; private set; }
+
+        /// <summary>
+        /// Changes the color of the player.
+        /// </summary>
+        /// <param name="color">The new color to apply.</param>
         public void ChangeColor(Color color)
         {
-            playerColor = color;
+            PlayerColor = color;
 
-            for (int i = 0; i < meshRenderers.Length; i++)
+            if (meshRenderers != null)
             {
-                meshRenderers[i].material.color = playerColor;
+                foreach (var renderer in meshRenderers)
+                {
+                    if (renderer != null)
+                    {
+                        renderer.material.color = PlayerColor;
+                    }
+                }
             }
         }
     }

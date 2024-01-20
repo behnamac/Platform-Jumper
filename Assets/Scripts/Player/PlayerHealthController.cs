@@ -6,19 +6,22 @@ namespace Player
 {
     public class PlayerHealthController : MonoBehaviour
     {
-        [SerializeField] private float maxHealth;
-        [SerializeField] private float speedDamage;
+        [SerializeField, Tooltip("Maximum health of the player.")]
+        private float maxHealth;
+
+        [SerializeField, Tooltip("The rate at which the player loses health over time.")]
+        private float speedDamage;
 
         private float _currentHealth;
-        private bool _dead;
-        private bool _start;
+        private bool _isDead;
+        private bool _isLevelStarted;
 
-        public float postLevelDamageValue { get; private set; }
+        public float PostLevelDamageValue { get; private set; }
 
         private void Awake()
         {
-            _currentHealth = maxHealth;
-            postLevelDamageValue = maxHealth / 15;
+            _currentHealth = maxHealth > 0 ? maxHealth : 100;
+            PostLevelDamageValue = maxHealth / 15;
 
             LevelManager.onLevelStart += OnLevelStart;
             LevelManager.onLevelStageComplete += OnLevelStageComplete;
@@ -32,42 +35,40 @@ namespace Player
 
         private void Update()
         {
-            if (_dead || !_start)
-            {
-                return;
-            }
+            if (_isDead || !_isLevelStarted) return;
 
-            _currentHealth -= speedDamage * Time.deltaTime;
-            _currentHealth = Mathf.Clamp(_currentHealth, 0, maxHealth);
-            UiController.instance.UpdatePlayerHealthBar(_currentHealth / maxHealth);
-
-            if (_currentHealth <= 0)
-            {
-                LevelManager.instance.LevelFail();
-                _dead = true;
-            }
+            UpdateHealth(-speedDamage * Time.deltaTime);
         }
 
         public void FinishDamage(float value)
         {
-            _currentHealth -= value;
-            _currentHealth = Mathf.Clamp(_currentHealth, 0, maxHealth);
-            UiController.instance.UpdatePlayerHealthBar(_currentHealth / maxHealth);
-
+            UpdateHealth(-value);
             if (_currentHealth <= 0)
             {
                 LevelManager.instance.LevelComplete();
             }
         }
 
+        private void UpdateHealth(float delta)
+        {
+            _currentHealth = Mathf.Clamp(_currentHealth + delta, 0, maxHealth);
+            UiController.instance.UpdatePlayerHealthBar(_currentHealth / maxHealth);
+
+            if (_currentHealth <= 0 && !_isDead)
+            {
+                _isDead = true;
+                LevelManager.instance.LevelFail();
+            }
+        }
+
         private void OnLevelStart(Level level)
         {
-            _start = true;
+            _isLevelStarted = true;
         }
 
         private void OnLevelStageComplete(Level level, int index)
         {
-            _start = false;
+            _isLevelStarted = false;
         }
     }
 }
